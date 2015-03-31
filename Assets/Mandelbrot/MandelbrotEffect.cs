@@ -9,6 +9,7 @@ public class MandelbrotEffect : MonoBehaviour {
     public float zoomSpeed;
     public float moveSpeed;
     public Text textZoomLevel;
+    public Text textControls;
     
     private Vector2 center;
     private Vector2 viewSize;
@@ -27,12 +28,12 @@ public class MandelbrotEffect : MonoBehaviour {
 	void Update () {
         bool zoomed = false;
 
-        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetKey(KeyCode.Q))
         {
             zoomLevel += zoomSpeed;
             zoomed = true;
         }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0 || Input.GetKey(KeyCode.E))
         {
             zoomLevel -= zoomSpeed;
             zoomed = true;
@@ -41,6 +42,11 @@ public class MandelbrotEffect : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.R))
         {
             Init();
+        }
+
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            textControls.gameObject.SetActive(!textControls.gameObject.activeSelf);
         }
 
         // change view size depending on zoom level (smoothly)
