@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class MandelbrotEffect : MonoBehaviour {
@@ -7,6 +8,7 @@ public class MandelbrotEffect : MonoBehaviour {
     public float zoomLevel;
     public float zoomSpeed;
     public float moveSpeed;
+    public Text textZoomLevel;
     
     private Vector2 center;
     private Vector2 viewSize;
@@ -50,8 +52,7 @@ public class MandelbrotEffect : MonoBehaviour {
         center.x += Input.GetAxis("Horizontal") * moveSpeed * zoomRatio;
         center.y -= Input.GetAxis("Vertical") * moveSpeed * zoomRatio; // DX uses 0,0 in top left    
 
- 
-
+        textZoomLevel.text = "Zoomlevel: " + zoomLevel;
 	}
 
 
@@ -75,6 +76,7 @@ public class MandelbrotEffect : MonoBehaviour {
         viewSize = startViewSize;
         autoplay = false;
         exponent = 1;
+        zoomLevel = 0;
     }
 
 
