@@ -1,16 +1,20 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class MandelbulbEffect : MonoBehaviour {
     public Material fractal;
+    public Light dirLight;
     public int iterations;
-    public float zoomLevel;
+    public int rayMarchSteps;
+    public int exponent;
+
     public float zoomSpeed;
     public float moveSpeed;
+    public float rotateSpeed;
+    public Text textZoomLevel;
     
-    private Vector2 center;
-    private Vector2 viewSize;
-    private int exponent;
+    private Camera c;
 
     public bool autoplay;
     Vector2 startViewSize = new Vector2(3, 2);
@@ -23,58 +27,56 @@ public class MandelbulbEffect : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        bool zoomed = false;
-
-        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (autoplay)
         {
-            zoomLevel += zoomSpeed;
-            zoomed = true;
+            // rotate the camera about the origin (with the camera looking at it)
+            c.transform.RotateAround(Vector3.zero, Vector3.up, Time.deltaTime * rotateSpeed);
         }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+
+        if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetKey(KeyCode.Q))
         {
-            zoomLevel -= zoomSpeed;
-            zoomed = true;
+            c.fieldOfView -= Time.deltaTime * zoomSpeed;
+            //c.transform.position += c.transform.forward * zoomSpeed * Time.deltaTime;
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0 || Input.GetKey(KeyCode.E))
+        {
+            // zoomout
+            c.fieldOfView += Time.deltaTime * zoomSpeed;
+            //c.transform.position -= c.transform.forward * zoomSpeed * Time.deltaTime;
         }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            Init();
+            autoplay = !autoplay;
         }
 
-        // change view size depending on zoom level (smoothly)
-        float zoomRatio = 1.0f / Mathf.Pow(2, zoomLevel);
-
-        if (zoomed)
-            viewSize = startViewSize * zoomRatio; // higher zoom = smaller view size
-
-        center.x += Input.GetAxis("Horizontal") * moveSpeed * zoomRatio;
-        center.y -= Input.GetAxis("Vertical") * moveSpeed * zoomRatio; // DX uses 0,0 in top left    
-
- 
-
-	}
+        c.transform.position += c.transform.right * Input.GetAxis("Horizontal") * moveSpeed;
+        c.transform.position += c.transform.up * Input.GetAxis("Vertical") * moveSpeed; // DX uses 0,0 in top left    
+    
+    }
 
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        fractal.SetFloat("_ZoomLevel", zoomLevel);
-        fractal.SetInt("_NumIterations", iterations);
         fractal.SetInt("_Exponent", exponent);
-        fractal.SetVector("_ScreenRes", new Vector2(Screen.width, Screen.height));        
-        fractal.SetVector("_Center", center);
-        fractal.SetVector("_ViewSize", viewSize);
+        fractal.SetInt("_NumIterations", iterations);
+        fractal.SetInt("_NumRayMarchSteps", rayMarchSteps);
+        fractal.SetFloat("_Fov", Mathf.Deg2Rad * c.fieldOfView);
+        fractal.SetVector("_LightDir", dirLight.transform.forward);
 
-
+        // if you choose to pass the camera to world matrix, do NOT use camera.cameraToWorldMatrix
+        // that one uses RHS (file:///C:/Program%20Files/Unity/Editor/Data/Documentation/en/ScriptReference/Camera-cameraToWorldMatrix.html)
+        // Use camera.transform.localToWorldMatrix instead.		
+        //fractal.SetMatrix("_CameraToWorldMatrix", c.transform.localToWorldMatrix);
+        
         Graphics.Blit(src, dst, fractal);
     }
 
 
     void Init()
     {
-        center = new Vector2(-0.5f, 0.0f);
-        viewSize = startViewSize;
-        autoplay = false;
-        exponent = 1;
+        // set all public variables in the inspector (and in the UI elements)
+        c = this.GetComponent<Camera>();
     }
 
 
@@ -84,10 +86,11 @@ public class MandelbulbEffect : MonoBehaviour {
         iterations = (int) n;
     }
 
-    public void SetAutoplay(bool ap)
+    public void SetRayMarchSteps(float n)
     {
-        autoplay = ap;
+        rayMarchSteps = (int)n;
     }
+
 
     public void SetExponent(float e)
     {
